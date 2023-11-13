@@ -1,40 +1,72 @@
-# ComCLIP
+## ComCLIP: Training-Free Compositional Image and Text Matching
 
+This is the code implementation for the paper titled: "ComCLIP: Training-Free Compositional Image and Text Matching" [[Arxiv](https://arxiv.org/abs/2211.13854)]
 
+<div align=center>  
+<img src='.github/overview.png' width="80%">
+</div>
+
+## Todo
 - [ ] Release dataset
-- [ ] Release code
+- [x] Release code
 - [ ] Release playground
 - [ ] HuggingFace and Kaggle dataset
 - [ ] Website 
 - [ ] Readme update 
 
 
+## Datasets
+Please follow the instructions below to prepare the datasets.
+1. Winoground <br/>
+[Download images](https://huggingface.co/datasets/facebook/winoground/tree/main/data) and store them as `datasets/winoground_images`. Code includes the download of csv file.
+2. Compositional Visual Genome (ComVG) <br/>
+[Download images](https://homes.cs.washington.edu/~ranjay/visualgenome/api.html) and store them as `datasets/comvg_images`. Test csv file at at `datasets/ComVG.csv`
+3. SVO-Probe<br/>
+[Download dataset](https://github.com/google-deepmind/svo_probes/blob/main/svo_probes.csv) and store the images as `datasets/SVO-Probes`. Store csv as `datasets/svo-probes.csv`
+4. Flickr30k<br/>
+[Download images](https://shannon.cs.illinois.edu/DenotationGraph/) and store them as `datasets/flickr30k_image`. Test pickle file is `datasets/flickr30k_test.pkl`
 
-ComCLIP: Training-Free Compositional Image and Text Matching
+## Usage 
+### Preparation 
+Please follow [GRiT Setup](https://github.com/JialianW/GRiT/blob/master/docs/INSTALL.md) and [CLIP Setup](https://github.com/openai/CLIP/tree/main) first.
+<pre>conda create --name comclip python=3.10
+conda activate comclip
+pip install -r requirements.txt
+</pre>
 
-ComVG & SVO_Probes:
-1. baseline.ipynb: baseline clip running on datasets
-2. ComCLIP.ipynb: main algorithm for ComCLIP
-3. OpenCLIP.ipynb: main algorithm for ComCLIP on openclip
-4. parse_image.py: helper functions to create subimages.
-5. match_relation.ipynb: gpt prompt to match dense captions to subject, object, predicates
+### Winoground
+<pre>cd winogroud
+### clip baseline
+python clip_baseline.py --huggingface_token HUGGINGFACE_TOKEN
+### blip baseline
+python blip_baseline.py --huggingface_token HUGGINGFACE_TOKEN
 
-flickr30k_mscoco:
-1. CLIP_ComCLIP.ipynb: comclip and clip retrieval on both datasets
-2. parse_image.py: helper functions to create subimages.
-3. parse_relation.ipynb: gpt prompt to parse subject, object, predicates and their connection in text
-4. match_relation.ipynb: gpt prompt to match dense captions to subject, object, predicates
+### comclip 
+comclip.sh IMAGE_PATH DENSE_CAPTION_PATH PARSE_TEXT_PATH GRiT_MODEL HUGGINGFACE_KEY OPENAI_KEY
+### comblip
+comclip.sh IMAGE_PATH DENSE_CAPTION_PATH PARSE_TEXT_PATH GRiT_MODEL HUGGINGFACE_KEY OPENAI_KEY
+</pre>
 
-VL-checklist:
-1. ComBLIP_BLIP.ipynb: main algorithm for ComBLIP, BLIP2 baseline
-2. ComCLIP_CLIP.ipynb: main algorithm for ComCLIP, CLIP baseline
-3. parse_image.py: helper functions to create subimages
-4. parse_relation.ipynb: gpt prompt to parse subject, object, predicates and their connection in text
-5. match_relation.ipynb: gpt prompt to match dense captions to subject, object, predicates
+### ComVG & SVO-Probes
+<pre>
+cd ComVG
+### clip baseline
+python clip_baseline.py --model VISION_ENCODER_TYPE --data_path CSV_PATH
+### comclip 
+comclip.sh
+</pre>
 
-winoground:
-1. ComBLIP_BLIP.ipynb: main algorithm for ComBLIP, BLIP2 baseline on winoground
-2. ComCLIP_CLIP.ipynb: main algorithm for ComCLIP, CLIP baseline on winoground
-3. parse_image.py: helper functions to create subimages
-4. parse_relation.ipynb: gpt prompt to parse subject, object, predicates and their connection in text
-5. match_relation.ipynb: gpt prompt to match dense captions to subject, object, predicates
+### Flick30k (image retrival)
+<pre>
+cd image_retrival
+### clip baseline
+python clip_baseline.py --model VISION_ENCODER_TYPE --data_path CSV_PATH
+### comclip 
+comclip.sh
+</pre>
+
+## Acknowledgement 
+This repo has inherited 2 open source projects: 1.[GRiT](https://github.com/JialianW/GRiT) 2.[CLIP](https://github.com/openai/CLIP) <br/>
+We thank the authors for their amazing work.
+
+## Citation
