@@ -3,16 +3,14 @@
 This is the code implementation for the paper: "ComCLIP: Training-Free Compositional Image and Text Matching" [[Arxiv](https://arxiv.org/abs/2211.13854)][[Project Website](todo)]
 
 <div align=center>  
-<img src='.github/overview.png' width="60%">
+<img src='assets/overview.png' width="60%">
 </div>
 
 ## Todo
 - [x] Release dataset
 - [x] Release code
-- [ ] Release playground
-- [ ] HuggingFace and Kaggle dataset
+- [x] Release playground
 - [ ] Website 
-- [ ] Readme update 
 
 ## Datasets
 Please follow the instructions below to prepare the datasets.
