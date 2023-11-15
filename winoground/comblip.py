@@ -8,10 +8,14 @@ import torch.nn.functional as F
 
 parser = argparse.ArgumentParser(description='Test BLIP image-text matching on winoground.')
 parser.add_argument('--RelationPath', type=str, help='Path to text relation files.')
-parser.add_argument('--image_path', type=str, help='images of all winoground dataset')
+parser.add_argument('--CaptionPath', type=str, help='Path store densecaption.')
+parser.add_argument('--image_path', type=str, help='Path that stores image.')
+parser.add_argument('--huggingface_token', type=str, help='Path that stores image.')
 args = parser.parse_args()
-relation_path = args.RelationPath+"{}_{}.json"
-IMAGE_PATH = args.image_path
+
+relation_path = args.RelationPath+"/{}_{}.json"
+caption_path = args.CaptionPath+"/ex_{}_img_{}.json"
+image_path = args.image_path+"/ex_{}_img_{}.png"
 auth_token = args.huggingface_token
 winoground = load_dataset("facebook/winoground", use_auth_token=auth_token)["test"]
 
@@ -42,9 +46,8 @@ def inference_one_pair(row_id, text_id, image_id):
     text_features = model.extract_features(sample, mode="text").text_embeds_proj[:,0,:].t()
 
     text_json = get_sentence_json(row_id, text_id)
-    object_images, key_map = create_sub_image_obj(row_id, text_id, image_id)
-    # print(object_images.keys())
-    relation_images, relation_words = create_relation_object(object_images, text_json, row_id, image_id, key_map)
+    object_images, key_map = create_sub_image_obj(row_id, text_id, image_id, image_path, caption_path, relation_path)
+    relation_images, relation_words = create_relation_object(object_images, text_json, row_id, image_id, key_map, image_path)
     if relation_images and relation_words:
         for relation_image, word in zip(relation_images, relation_words):
             object_images[word] = relation_image

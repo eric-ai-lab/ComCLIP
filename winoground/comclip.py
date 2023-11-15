@@ -7,8 +7,14 @@ import torch
 
 parser = argparse.ArgumentParser(description='Test CLIP ViT/B-32 on winoground.')
 parser.add_argument('--RelationPath', type=str, help='Path to text relation files.')
+parser.add_argument('--CaptionPath', type=str, help='Path store densecaption.')
+parser.add_argument('--image_path', type=str, help='Path that stores image.')
+parser.add_argument('--huggingface_token', type=str, help='Path that stores image.')
 args = parser.parse_args()
-relation_path = args.RelationPath+"{}_{}.json"
+
+relation_path = args.RelationPath+"/{}_{}.json"
+caption_path = args.CaptionPath+"/ex_{}_img_{}.json"
+image_path = args.image_path+"/ex_{}_img_{}.png"
 auth_token = args.huggingface_token
 winoground = load_dataset("facebook/winoground", use_auth_token=auth_token)["test"]
 
@@ -17,7 +23,7 @@ clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
 clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 clip_model.to(device)
 
-def subimage_score_embedding(image, text, clip_processor, clip_model):
+def subimage_score_embedding(image, text):
     if text:
         processor = send_gpu(clip_processor(text=[text], images=[image], return_tensors="pt"), device)
         output = clip_model(**processor)
@@ -41,8 +47,8 @@ def inference_one_pair(row_id, caption_id, image_id):
     original_image_embed = original_output.image_embeds
     original_text_embed = original_output.text_embeds
     text_json = get_sentence_json(row_id, caption_id, relation_path)
-    object_images, key_map = create_sub_image_obj(row_id, caption_id, image_id)
-    relation_images, relation_words = create_relation_object(object_images, text_json, row_id, image_id, key_map)
+    object_images, key_map = create_sub_image_obj(row_id, caption_id, image_id, image_path, caption_path, relation_path)
+    relation_images, relation_words = create_relation_object(object_images, text_json, row_id, image_id, key_map, image_path)
     if relation_images and relation_words:
         for relation_image, word in zip(relation_images, relation_words):
             object_images[word] = relation_image

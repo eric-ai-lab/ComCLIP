@@ -5,13 +5,13 @@ import pandas as pd
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_arguments("openaikey", type=str)
-parser.add_arguments("relation_json_path", type=str)
-parser.add_arguments("data_path", type=str)
+parser.add_argument("--openai", type=str, help="openai api key")
+parser.add_argument("--relation_json_path", type=str)
+parser.add_argument("--data_path", type=str)
 args = parser.parse_args()
-data = pd.read_picklet(args.data_path)
+data = pd.read_pickle(args.data_path)
+openai.api_key = args.openai
 SAVE_TEXT_JSON_PATH = args.relation_json_path+"/{}.json"
-
 
 def get_relation(text):
     input = "Given a sentence in triple quotes \"\"\"{}\"\"\", analyze the objects in this sentence, the attributes of the objects ".format(text) \

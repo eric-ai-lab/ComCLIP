@@ -63,4 +63,4 @@ class VisualizationDemo(object):
         instances = predictions["instances"].to(self.cpu_device)
         vis_output = visualizer.draw_instance_predictions(predictions=instances)
 
-        return predictions, vis_output
+        return predictions, vis_output, instances

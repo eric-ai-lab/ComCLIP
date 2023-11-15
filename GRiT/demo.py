@@ -5,7 +5,7 @@ import time
 import cv2
 import tqdm
 import sys
-
+import json
 from detectron2.config import get_cfg
 from detectron2.data.detection_utils import read_image
 from detectron2.utils.logger import setup_logger
@@ -108,7 +108,10 @@ if __name__ == "__main__":
                 if os.path.isdir(args.output):
                     assert os.path.isdir(args.output), args.output
                     out_filename = os.path.join(args.output, os.path.basename(path))
-                    out_filename = out_filename.replace("jpg", "json")
+                    if "png" in out_filename:
+                        out_filename = out_filename.replace("png", "json")
+                    if "jpg" in out_filename:
+                        out_filename = out_filename.replace("jpg", "json")
                 for (name, box) in zip(predict_object, predict_box):
                     if name not in json_file:
                         json_file[name] = [box.tolist()]

@@ -2,14 +2,11 @@ import json
 from PIL import Image, ImageDraw
 import numpy as np
 
-IMAGE_PATH = "/path/to/image/folder/{}.jpg"
-TEXT_JSON_PATH = "../text-json/{}.json"
-MATCHIN_JSON_PATH = "../matching/row_{}_image_{}.json"
-DENSE_CAPTION_PAYTH = "../caption_json/{}.json"
+MATCHIN_JSON_PATH = "matched_relation/row_{}_image_{}.json"
 
 
-def read_image(id):
-    return Image.open(IMAGE_PATH.format(id))
+def read_image(id, image_path):
+    return Image.open(image_path.format(id))
 
 def send_gpu(original_processor, device):
     original_processor['pixel_values'] = original_processor['pixel_values'].to(device)
@@ -22,8 +19,8 @@ def get_matching(row_id, image_id):
     result = json.load(f)
     return result    
 
-def get_sentence_json(row_id):
-    f = open(TEXT_JSON_PATH.format(row_id))
+def get_sentence_json(row_id, text_json_path):
+    f = open(text_json_path.format(row_id))
     result = json.load(f)
     return json.loads(result)
 
@@ -41,14 +38,14 @@ def black_outside_rectangle(image, left_top, right_bottom):
 
     return blacked_out_image
 
-def create_sub_image_obj(row_id, image_id):
+def create_sub_image_obj(row_id, image_id, image_path, relation_path, dense_caption_path):
     object_image = {}
     old_key_to_new_key = {}
     matched_objects = get_matching(row_id, image_id)
-    image = Image.open(IMAGE_PATH.format(image_id))
-    attributes = open(TEXT_JSON_PATH.format(row_id))
+    image = Image.open(image_path.format(image_id))
+    attributes = open(relation_path.format(row_id))
     attributes = json.loads(json.load(attributes))["objects"]
-    location = json.load(open(DENSE_CAPTION_PAYTH.format(image_id)))
+    location = json.load(open(dense_caption_path.format(image_id)))
     for key, object_name in matched_objects.items():
         if key in attributes and "attributes" in attributes[key]:
             key_name = key
@@ -99,11 +96,10 @@ def normalize_tensor_list(tensor_list):
     normalized_list = [tensor / total_sum for tensor in tensor_list]
     return normalized_list
 
-def create_relation_object(object_images, text_json, row_id, image_id, key_map):
+def create_relation_object(object_images, text_json, image_id, key_map, image_path):
     if "connections" not in text_json:
         return None, None
     relations = text_json["connections"]
-    object_names = list(object_images.keys())
     key_names = list(key_map.keys())
     if type(relations) is not list or len(relations) == 0:
         return None, None
@@ -123,13 +119,13 @@ def create_relation_object(object_images, text_json, row_id, image_id, key_map):
         else:
             object = None
         if subject not in key_names and object in key_names:
-            verb_image = Image.open(IMAGE_PATH.format(image_id))
+            verb_image = Image.open(image_path.format(image_id))
         elif subject in key_names and object not in key_names:
-            verb_image = Image.open(IMAGE_PATH.format(image_id))
+            verb_image = Image.open(image_path.format(image_id))
         elif subject in key_names and object in key_names:
             verb_image = overlay_images([object_images[key_map[object]], object_images[key_map[subject]]])
         else:
-            verb_image = Image.open(IMAGE_PATH.format(image_id))
+            verb_image = Image.open(image_path.format(image_id))
         verb_images.append(verb_image)
         verbs.append(verb)
     return verb_images, verbs

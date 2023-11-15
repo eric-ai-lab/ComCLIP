@@ -4,13 +4,14 @@ import json
 from json import JSONDecodeError
 import time
 import argparse
-parser = argparse.ArgumentParser(description='Test BILP2 on winoground.')
+parser = argparse.ArgumentParser(description='Match text to densecaption on winoground.')
 parser.add_argument('--huggingface_token', type=str, help='Huggingface token from the Hugging Face account.')
 parser.add_argument('--openai', type=str, help='OpenAI api key.')
-args = parser.parse_args("--RelationPath", type=str, help="Folder path that stores dense caption from GRiT")
-parser.add_argument()
+parser.add_argument("--RelationPath", type=str, help="Folder path that stores dense caption from GRiT")
+parser.add_argument("--DenseCaptionPath", type=str, help="Folder path that stores dense caption from GRiT")
+args = parser.parse_args()
 openai.api_key = args.openai
-CAPTION_PATH = args.DenseCaptionPath + "/row_{}_img_{}.json"
+CAPTION_PATH = args.DenseCaptionPath + "/ex_{}_img_{}.json"
 RELATION_JSON_PATH = args.RelationPath + "/{}_{}.json"
 SAVE_MATCHING_PATH = 'matched_relation/{}_caption{}_image{}.json'
 

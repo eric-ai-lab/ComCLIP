@@ -39,11 +39,9 @@ def inference_one_pair(row, caption, image_id):
         original_image_embed = model.encode_image(image_input).float()
         original_text_embed = model.encode_text(text_input).float()
 
-    svo = svo.replace("[", "")
-    svo = svo.replace("]", "")
     svo = row.pos_triplet.split(",")
     subj, verb, obj = svo[0], svo[1], svo[-1]
-    object_images, matched_json = create_sub_image_obj(row.sentence_id, image_id, IMAGE_PATH)
+    object_images, matched_json = create_sub_image_obj(row.sentence_id, image_id, IMAGE_PATH, CAPTION_PATH, MATCHING_PATH)
     relation_images, relation_words = create_relation_object(object_images, subj, verb, obj, image_id, matched_json, IMAGE_PATH)
     if relation_images and relation_words:
         for relation_image, word in zip(relation_images, relation_words):

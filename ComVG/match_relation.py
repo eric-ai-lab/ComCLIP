@@ -12,8 +12,8 @@ args = parser.parse_args()
 openai.api_key = args.openai
 
 data = pd.read_csv(args.dataset_path)
-densecaption_path = args.densecaption_path
-matched_json_file_save_path = "matched_realtion"
+densecaption_path = args.densecaption_path + "/{}.json"
+matched_json_file_save_path = "matched_relation/sentence_{}_image_{}.json"
 
 
 def get_dense_caption(image_id):

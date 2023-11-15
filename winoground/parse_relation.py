@@ -5,9 +5,9 @@ import argparse
 parser = argparse.ArgumentParser(description='Test BILP2 on winoground.')
 parser.add_argument('--huggingface_token', type=str, help='Huggingface token from the Hugging Face account.')
 parser.add_argument('--openai', type=str, help='OpenAI api key.')
-args = parser.parse_args("--OutputRelationPath", type=str, help="Folder path that stores dense caption from GRiT")
-parser.add_argument()
-SAVE_TEXT_JSON_PATH = args.OutputRelationPath
+parser.add_argument("--output_relation_path", type=str, help="Folder path that stores dense caption from GRiT")
+args = parser.parse_args()
+SAVE_TEXT_JSON_PATH = args.output_relation_path + "/{}_{}.json"
 openai.api_key = args.openai
 
 def load_preset(args):
@@ -26,7 +26,8 @@ def get_relation(text):
 
 def parse_relation(winoground):
     for i in range(len(winoground)):
-        print(i)
+        if (i % 100) == 0:
+            print("completed {}".format(i))
         result_0 = get_relation(winoground[i]["caption_0"])
         with open(SAVE_TEXT_JSON_PATH.format(i, 0), 'w') as f:
             json.dump(result_0, f)

@@ -4,14 +4,20 @@ import torch
 import clip
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("dataset", type = str)
-parser.add_argument("model", type=str)
+parser.add_argument("--dataset", type = str)
+parser.add_argument("--image_path", type=str, help="path to images")
+parser.add_argument("--text_relation_path", type=str, help="path to relation files")
+parser.add_argument("--dense_caption_path", type=str, help="path to densecaption")
+parser.add_argument("--model", type=str)
 args = parser.parse_args()
 
 device = "cuda:0"
-data = pd.read_pickle("dataset.pkl") ### Flickr30k or MSCOCO test set
+data = pd.read_pickle(args.dataset) ### Flickr30k or MSCOCO test set
 model, preprocess = clip.load("RN50", device='cpu')
 model.cuda(device).eval()
+IMAGE_PATH = args.image_path + "{}.jpg"
+TEXT_JSON_PATH = args.text_relation_path + "/{}.json"
+DENSE_CAPTION_PAYTH = args.dense_caption_path + "/{}.json"
 
 def subimage_score_embedding(image, text):
     if text:
@@ -27,15 +33,15 @@ def subimage_score_embedding(image, text):
         return None, None
     
 def comclip_one_pair(row_id, caption, image_id):
-    image = preprocess(read_image(image_id))
+    image = preprocess(read_image(image_id, IMAGE_PATH))
     text_input = clip.tokenize(caption).cuda(device)
     image_input = torch.tensor(np.stack([image])).cuda(device)
     with torch.no_grad():
         original_image_embed = model.encode_image(image_input).float()
         original_text_embed = model.encode_text(text_input).float()
-    text_json = get_sentence_json(row_id)
-    object_images, key_map = create_sub_image_obj(row_id, image_id)
-    relation_images, relation_words = create_relation_object(object_images, text_json, row_id, image_id, key_map)
+    text_json = get_sentence_json(row_id, TEXT_JSON_PATH)
+    object_images, key_map = create_sub_image_obj(row_id, image_id, IMAGE_PATH, TEXT_JSON_PATH, DENSE_CAPTION_PAYTH)
+    relation_images, relation_words = create_relation_object(object_images, text_json, image_id, key_map, IMAGE_PATH)
     if relation_images and relation_words:
         for relation_image, word in zip(relation_images, relation_words):
             if word in object_images:
@@ -87,4 +93,4 @@ if __name__ == "__main__":
             top_1 += 1
         if int(idx) in candidates[:5]:
             top_5 += 1
-    print("Top 1 score: {}. Top 5 score: {}".format(top_1/ len(1000), top_5/ len(1000)))
+    print("Top 1 score: {}. Top 5 score: {}".format(top_1/ 1000, top_5/ 1000))

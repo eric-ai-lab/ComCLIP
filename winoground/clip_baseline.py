@@ -8,16 +8,14 @@ import torch
 parser = argparse.ArgumentParser(description='Test CLIP ViT/B-32 on winoground.')
 parser.add_argument('--huggingface_token', type=str, help='Huggingface token from the Hugging Face account.')
 args = parser.parse_args()
-print(args)
-print(args.huggingface_token)
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def load_data(args):
     auth_token = args.huggingface_token
-    winoground = load_dataset("facebook/winoground", use_auth_token=auth_token)["test"]
+    winoground = load_dataset("facebook/winoground", token=auth_token)["test"]
     return winoground
 
 def load_model():
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
     clip_model.to(device)

@@ -2,17 +2,16 @@ from datasets import load_dataset
 from helper_function import *
 import argparse
 from tqdm import tqdm
-import torch
 from lavis.models import load_model_and_preprocess
 device = "cuda:0"
 parser = argparse.ArgumentParser(description='Test BILP2 on winoground.')
 parser.add_argument('--huggingface_token', type=str, help='Huggingface token from the Hugging Face account.')
 parser.add_argument('--image_path', type=str, help='images of all winoground dataset')
 args = parser.parse_args()
-IMAGE_PATH = args.image_path
+IMAGE_PATH = args.image_path+"/ex_{}_img_{}.png"
 
 auth_token = args.huggingface_token
-winoground = load_dataset("facebook/winoground", use_auth_token=auth_token)["test"]
+winoground = load_dataset("facebook/winoground", token=auth_token)["test"]
 
 model, vis_processors, text_processors = load_model_and_preprocess("blip2_image_text_matching", "pretrain", device=device, is_eval=True)
 

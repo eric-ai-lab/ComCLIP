@@ -6,15 +6,19 @@ from json import JSONDecodeError
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("dataset", type=str)
-parser.add_argument("dense_caption_path", type=str)
-parser.add_argument("text_relation_path", type=str)
+parser.add_argument("--dataset", type=str)
+parser.add_argument("--dense_caption_path", type=str)
+parser.add_argument("--text_relation_path", type=str)
+parser.add_argument("--openai", type=str, help="openai_key")
 args = parser.parse_args()
-DATA_PICKLE_PATH = args.dataset ## Flickr30k or MSCOCO dataset
+
+DATA_PICKLE_PATH = args.dataset 
 data = pd.read_pickle(DATA_PICKLE_PATH)
 DENSE_CAPTION_FILE_PATH = args.dense_caption_path + "/{}.json"
 TEXT_RELATION_FILE_PATH = args.text_relation_path + "/{}.json"
 SAVE_MATCHING_PATH = 'matched_relation/row_{}_image_{}.json'
+
+openai.api_key = args.openai
 
 def get_dense_caption(image_id):
     f = open(DENSE_CAPTION_FILE_PATH.format(image_id))
@@ -41,6 +45,7 @@ def match_objects(sentence, object, list):
         return json.loads(completion["choices"][0]["message"]["content"])
     except Exception as e:
         raise e
+    
 def generate_caption_to_image(caption, obejct_list, image_list):
     result = {}
     for object in obejct_list:
@@ -50,7 +55,7 @@ def generate_caption_to_image(caption, obejct_list, image_list):
 
 if __name__ == "__main__":
     for idx, row in data.iterrows():
-        candidates = row.candidates_ten
+        candidates = row.clip_baseline
         candidates = [item[0] for item in candidates]
         for image_id in candidates:
             if not os.path.exists(SAVE_MATCHING_PATH.format(idx, image_id)):

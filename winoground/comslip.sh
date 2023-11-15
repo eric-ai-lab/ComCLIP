@@ -13,5 +13,4 @@ python GRiT/demo.py --test-task DenseCap --config-file GRiT/configs/GRiT_B_Dense
 python winoground/parse_relation.py --output_relation_path $3 --huggingface $5 --openai $6
 mkdir winoground/matched_relation
 python winoground/match_relation.py --huggingface_token $5 --DenseCaptionPath $2 --RelationPath $3 --openai $6
-python winoground/comblip.py --RelationPath $3 --CaptionPath $2 --image_path $1 --huggingface_token $5
-
+python winoground/comslip.py --RelationPath $3 --CaptionPath $2 --image_path $1 --huggingface_token $5

@@ -1,14 +1,12 @@
 import json
 from PIL import Image, ImageDraw
 import numpy as np
-MATCHING_PATH = "../comvg-matching/sentence_{}_image_{}.json"
-CAPTION_PATH = "../comvg-caption-json/{}.json"
 
 def read_image(id, path_format):
     return Image.open(path_format.format(id))
 
-def get_matching(caption_id, image_id):
-    f = open(CAPTION_PATH.format(caption_id, image_id))
+def get_matching(caption_id, image_id, matched_path):
+    f = open(matched_path.format(caption_id, image_id))
     result = json.load(f)
     return result    
 
@@ -20,11 +18,12 @@ def black_outside_rectangle(image, left_top, right_bottom):
     blacked_out_image.paste(image, mask=mask)
     return blacked_out_image
 
-def create_sub_image_obj(sentence_id, image_id, image_path):
+def create_sub_image_obj(sentence_id, image_id, image_path, densecaption_path, matched_path):
+    print(sentence_id, image_id, image_path, densecaption_path, matched_path)
     object_image = {}
-    matched_objects = get_matching(sentence_id, image_id)
+    matched_objects = get_matching(sentence_id, image_id, matched_path)
     image = Image.open(image_path.format(image_id))
-    location = json.load(open(CAPTION_PATH.format(image_id)))
+    location = json.load(open(densecaption_path.format(image_id)))
     for key, object_name in matched_objects.items():
         if len(object_name) == 0:
             object_image[key] = image
@@ -73,3 +72,4 @@ def normalize_tensor_list(tensor_list):
     total_sum = sum(tensor.item() for tensor in tensor_list)
     normalized_list = [tensor / total_sum for tensor in tensor_list]
     return normalized_list
+
