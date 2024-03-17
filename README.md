@@ -1,6 +1,7 @@
 ## ComCLIP: Training-Free Compositional Image and Text Matching
 
-This is the code implementation for the paper: "ComCLIP: Training-Free Compositional Image and Text Matching" [[Arxiv](https://arxiv.org/abs/2211.13854)][[Project Website](todo)]
+This is the code implementation for the paper: "ComCLIP: Training-Free Compositional Image and Text Matching" [[Arxiv](https://arxiv.org/abs/2211.13854)][[Project Website](https://sites.google.com/view/
+comclip)]
 
 <div align=center>  
 <img src='assets/overview.png' width="60%">
