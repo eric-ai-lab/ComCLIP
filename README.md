@@ -10,7 +10,7 @@ This is the code implementation for the NAACL2024 paper: "ComCLIP: Training-Free
 - [x] Release dataset
 - [x] Release code
 - [x] Release playground
-- [ ] Website 
+- [x] Website 
 
 ## Datasets
 Please follow the instructions below to prepare the datasets.
