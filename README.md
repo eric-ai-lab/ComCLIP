@@ -6,18 +6,13 @@ This is the code implementation for the NAACL2024 paper: "ComCLIP: Training-Free
 <img src='assets/overview.png' width="60%">
 </div>
 
-## Todo
-- [x] Release dataset
-- [x] Release code
-- [x] Release playground
-- [x] Website 
 
 ## Datasets
 Please follow the instructions below to prepare the datasets.
 1. Winoground <br/>
 [Download images](https://huggingface.co/datasets/facebook/winoground/tree/main/data) and store them as `datasets/winoground_images`. Code includes the download of csv file.
 2. Compositional Visual Genome (ComVG) <br/>
-[Download images](https://homes.cs.washington.edu/~ranjay/visualgenome/api.html) and store them as `datasets/comvg_images`. Test csv file at at `datasets/ComVG.csv`
+[Download images](https://homes.cs.washington.edu/~ranjay/visualgenome/api.html) and store them as `datasets/comvg_images`. [Test csv file](https://drive.google.com/file/d/1rWHuq48paToXZs7_OT2Wko4l5YrAfFmR/edit) at at `datasets/ComVG.csv`
 3. SVO-Probe<br/>
 [Download dataset](https://github.com/google-deepmind/svo_probes/blob/main/svo_probes.csv) and store the images as `datasets/SVO-Probes`. Store csv as `datasets/svo-probes.csv`
 4. Flickr30k<br/>
@@ -67,7 +62,7 @@ image_retrieval/comclip.sh datasets/flickr30k_image DENSE_CAPTION_FOLDER GRiT_MO
 </pre>
 
 ## Acknowledgement 
-This code is built on 1.[GRiT](https://github.com/JialianW/GRiT) 2.[CLIP](https://github.com/openai/CLIP).
+This code is mainly built on 1.[GRiT](https://github.com/JialianW/GRiT) 2.[CLIP](https://github.com/openai/CLIP).
 We thank the authors for their model and code.
 
 ## Citation
