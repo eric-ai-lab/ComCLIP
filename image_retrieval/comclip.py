@@ -3,6 +3,7 @@ import pandas as pd
 import torch
 import clip
 import argparse
+from transformers import BLIP2Processor, BLIP2Model, AutoTokenizer
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type = str)
 parser.add_argument("--image_path", type=str, help="path to images")
@@ -13,7 +14,9 @@ args = parser.parse_args()
 
 device = "cuda:0"
 data = pd.read_pickle(args.dataset) ### Flickr30k or MSCOCO test set
-model, preprocess = clip.load("RN50", device='cpu')
+preprocess= BLIP2Processor.from_pretrained(args.model,device='cpu')
+model = BLIP2Model.from_pretrained(args.model,device='cpu')
+#model, preprocess = clip.load("RN50", device='cpu')
 model.cuda(device).eval()
 IMAGE_PATH = args.image_path + "{}.jpg"
 TEXT_JSON_PATH = args.text_relation_path + "/{}.json"
@@ -21,14 +24,26 @@ DENSE_CAPTION_PAYTH = args.dense_caption_path + "/{}.json"
 
 def subimage_score_embedding(image, text):
     if text:
-        image = preprocess(image)
-        text_input = clip.tokenize(text).cuda(device)
-        image_input = torch.tensor(np.stack([image])).cuda(device)
+        # image = preprocess(image)
+        # text_input = clip.tokenize(text).cuda(device)
+        # image_input = torch.tensor(np.stack([image])).cuda(device)
+        # with torch.no_grad():
+        #     image_embed = model.encode_image(image_input).float()
+        #     text_embed = model.encode_text(text_input).float()
+        # score = text_embed @ image_embed.T
+        # return image_embed, score
+        image_inputs = processor(images=image, return_tensors="pt")
+        image_input = model.get_image_features(**image_inputs).cuda(device)
+        text_inputs = tokenizer(caption, padding=True, return_tensors="pt")
+        text_input= = model.get_text_features(**text_inputs).cuda(device)
         with torch.no_grad():
-            image_embed = model.encode_image(image_input).float()
-            text_embed = model.encode_text(text_input).float()
-        score = text_embed @ image_embed.T
-        return image_embed, score
+            original_image_embed = image_input.float()
+            original_text_embed =  text_input.float()
+            #original_image_embed = model.encode_image(image_input).float()
+            #original_text_embed = model.encode_text(text_input).float()
+        score = original_text_embed @ original_image_embed.T
+        return original_image_embed, score
+
     else:
         return None, None
     

@@ -1,0 +1,121 @@
+from helper_function import *
+import pandas as pd
+import faiss
+import numpy as np
+import torch
+import clip
+import argparse
+from transformers import BLIP2Processor, BLIP2Model, AutoTokenizer
+parser = argparse.ArgumentParser()
+parser.add_argument("--dataset", type = str)
+parser.add_argument("--image_path", type=str, help="path to images")
+parser.add_argument("--text_relation_path", type=str, help="path to relation files")
+parser.add_argument("--dense_caption_path", type=str, help="path to densecaption")
+parser.add_argument("--model", type=str)
+args = parser.parse_args()
+
+device = "cuda:0"
+data = pd.read_pickle(args.dataset) ### Flickr30k or MSCOCO test set
+preprocess= BLIP2Processor.from_pretrained(args.model,device='cpu')
+model = BLIP2Model.from_pretrained(args.model,device='cpu')
+#model, preprocess = clip.load("RN50", device='cpu')
+model.cuda(device).eval()
+IMAGE_PATH = args.image_path + "{}.jpg"
+TEXT_JSON_PATH = args.text_relation_path + "/{}.json"
+DENSE_CAPTION_PAYTH = args.dense_caption_path + "/{}.json"
+
+def subimage_score_embedding(image, text):
+    if text:
+        # image = preprocess(image)
+        # text_input = clip.tokenize(text).cuda(device)
+        # image_input = torch.tensor(np.stack([image])).cuda(device)
+        # with torch.no_grad():
+        #     image_embed = model.encode_image(image_input).float()
+        #     text_embed = model.encode_text(text_input).float()
+        # score = text_embed @ image_embed.T
+        # return image_embed, score
+        image_inputs = processor(images=image, return_tensors="pt")
+        image_input = model.get_image_features(**image_inputs).cuda(device)
+        text_inputs = tokenizer(caption, padding=True, return_tensors="pt")
+        text_input = model.get_text_features(**text_inputs).cuda(device)
+        with torch.no_grad():
+            original_image_embed = image_input.float()
+            original_text_embed =  text_input.float()
+            #original_image_embed = model.encode_image(image_input).float()
+            #original_text_embed = model.encode_text(text_input).float()
+        score = original_text_embed @ original_image_embed.T
+        return original_image_embed, score
+
+    else:
+        return None, None
+    
+def comclip_one_pair(row_id, caption, image_id):
+    image_inputs = processor(images=image, return_tensors="pt")
+    image_input = model.get_image_features(**image_inputs).cuda(device)
+    text_inputs = tokenizer(caption, padding=True, return_tensors="pt")
+    text_input = model.get_text_features(**text_inputs).cuda(device)
+    with torch.no_grad():
+        original_image_embed = image_input.float()
+        original_text_embed =  text_input.float()
+    text_json = get_sentence_json(row_id, TEXT_JSON_PATH)
+    object_images, key_map = create_sub_image_obj(row_id, image_id, IMAGE_PATH, TEXT_JSON_PATH, DENSE_CAPTION_PAYTH)
+    relation_images, relation_words = create_relation_object(object_images, text_json, image_id, key_map, IMAGE_PATH)
+    if relation_images and relation_words:
+        for relation_image, word in zip(relation_images, relation_words):
+            if word in object_images:
+                object_images[word+"_dup"] = relation_image
+            else:
+                object_images[word] = relation_image
+
+    ##subimages
+    # Create image embeddings array
+    image_embeds = []
+    image_scores = []
+    for key, sub_image in object_images.items():
+        if "_dup" in key:
+            key = key.replace("_dup", "")
+        image_embed, image_score = subimage_score_embedding(sub_image, key)
+        if image_embed is not None and image_score is not None:
+            # Append image features to image_embeds
+            image_input = model.get_image_features(**image_inputs).cuda(device)
+            image_embeds = np.append(image_embed, image_input.cpu().numpy(), axis=0)
+            image_scores.append(image_score)
+    image_embed_dim = image_embeds.ndim
+    index = faiss.IndexFlatL2(image_embed_dim)
+    # Thêm tất cả các embedding vào index
+    index.add(image_embeds)
+    #regularize the scores
+    similarity = normalize_tensor_list(image_scores)
+    for score, image in zip(similarity, index):
+        original_image_embed += score * image
+    image_features = original_image_embed / original_image_embed.norm(dim=-1, keepdim=True).float()
+    text_features = original_text_embed /original_text_embed.norm(dim=-1, keepdim=True).float()
+    similarity = text_features.detach().cpu().numpy() @ image_features.detach().cpu().numpy().T
+    return similarity
+
+def get_score(row_id):
+    result = {}
+    row = data.iloc[row_id]
+    candidates = row.clip_top_ten_pick
+    for candidate in candidates:
+        result[candidate[0]] = comclip_one_pair(row_id, row.sentence, candidate[0]).item()
+    result = dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
+    return result
+
+if __name__ == "__main__":
+    comclip_score = {}
+    for idx, row in data.iterrows():
+        try:
+            comclip_score[idx] = get_score(idx)
+        except Exception as e:
+            print(e)
+    top_1 = 0
+    top_5 = 0
+    for idx, value in comclip_score.items():
+        candidates = list(value.keys())
+        candidates = [int(i) for i in candidates]
+        if candidates[0] == int(idx):
+            top_1 += 1
+        if int(idx) in candidates[:5]:
+            top_5 += 1
+    print("Top 1 score: {}. Top 5 score: {}".format(top_1/ 1000, top_5/ 1000))

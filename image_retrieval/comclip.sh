@@ -11,4 +11,5 @@ mkdir image_retrieval/relation_json
 python image_retrieval/parse_relation.py --relation_json_path image_retrieval/relation_json --data_path $4
 mkdir image_retrieval/matched_relation
 python image_retrieval/match_relation.py --densecaption_path $2 --dataset_path $4 --openai $5
-python image_retrieval/comclip.py --dataset $4 --image_path $1 --text_relation_path image_retrieval/relation_json --densecaption_path $2 --model $6
+#python image_retrieval/comclip.py --dataset $4 --image_path $1 --text_relation_path image_retrieval/relation_json --densecaption_path $2 --model $6
+python image_retrieval/blip2.py --dataset $4 --image_path $1 --text_relation_path image_retrieval/relation_json --densecaption_path $2 --model $6

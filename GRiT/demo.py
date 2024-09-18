@@ -9,6 +9,7 @@ import json
 from detectron2.config import get_cfg
 from detectron2.data.detection_utils import read_image
 from detectron2.utils.logger import setup_logger
+from transformers import Blip2Processor, Blip2ForConditionalGeneration
 
 sys.path.insert(0, 'third_party/CenterNet2/projects/CenterNet2/')
 from centernet.config import add_centernet_config
@@ -80,7 +81,56 @@ def get_parser():
         nargs=argparse.REMAINDER,
     )
     return parser
+def extract_features_with_blip2(image):
+    processor = Blip2Processor.from_pretrained("Salesforce/blip2-flan-t5-xl")
+    model = Blip2ForConditionalGeneration.from_pretrained("Salesforce/blip2-flan-t5-xl")   
 
+
+    inputs = processor(images=image, return_tensors="pt")
+    outputs = model.generate(**inputs)
+    text_description = processor.decode(outputs[0], skip_special_tokens=True)
+
+    return text_description
+
+def process_image(cfg, img_path, output_dir):
+    """
+    Processes a single image using GRiT and saves results in JSON format.
+
+    Args:
+        cfg (CfgNode): Detectron2 configuration.
+        img_path (str): Path to the image file.
+        output_dir (str): Directory to save the JSON file (optional).
+
+    Returns:
+        None
+    """
+
+    demo = VisualizationDemo(cfg)
+    img = read_image(img_path, format="BGR")
+    text_description = extract_features_with_blip2(img)
+    start_time = time.time()
+    predictions, visualized_output, bbox = demo.run_on_image(img)
+
+    if output_dir:
+        json_file = {}
+        predict_object = bbox.pred_object_descriptions.data
+        predict_box = bbox.pred_boxes
+
+        for (name, box) in zip(predict_object, predict_box):
+            if name not in json_file:
+                json_file[name] = [box.tolist()]
+            else:
+                json_file[name].append(box.tolist())   
+
+
+        out_filename = os.path.join(output_dir, os.path.splitext(os.path.basename(img_path))[0] + ".json")
+        with open(out_filename, "w") as outfile:
+            json.dump(json_file, outfile)
+    else:
+        cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
+        cv2.imshow(WINDOW_NAME, visualized_output.get_image()[:, :, ::-1])
+        if cv2.waitKey(0) == 27:
+            cv2.destroyAllWindows()   
 
 if __name__ == "__main__":
     mp.set_start_method("spawn", force=True)
@@ -97,6 +147,7 @@ if __name__ == "__main__":
         for path in tqdm.tqdm(os.listdir(args.input[0]), disable=not args.output):
             img = read_image(os.path.join(args.input[0], path), format="BGR")
             start_time = time.time()
+            process_image(cfg, img_path, output_dir)
             predictions, visualized_output, bbox = demo.run_on_image(img)
 
             if args.output:
